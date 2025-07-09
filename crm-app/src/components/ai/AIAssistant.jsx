@@ -78,7 +78,7 @@ export const AIAssistant = () => {
     }`}>
       <div className="bg-card border border-border rounded-lg shadow-xl h-full flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground p-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Bot className="h-5 w-5" />
             <span className="font-medium">Assistente IA</span>

@@ -222,14 +222,14 @@ export const MensagensPage = () => {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-lg p-4 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.015]">
           <div className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-primary" />
             <span className="text-sm text-muted-foreground">Total de Templates</span>
           </div>
           <p className="text-2xl font-bold mt-2">{mensagens.length}</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-lg p-4 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.015]">
           <div className="flex items-center space-x-2">
             <Send className="h-5 w-5 text-green-500" />
             <span className="text-sm text-muted-foreground">Mensagens Enviadas</span>
@@ -238,14 +238,14 @@ export const MensagensPage = () => {
             {mensagens.reduce((total, msg) => total + msg.vezesUsada, 0)}
           </p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-lg p-4 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.015]">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-blue-500" />
             <span className="text-sm text-muted-foreground">Este Mês</span>
           </div>
           <p className="text-2xl font-bold mt-2">89</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-lg p-4 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.015]">
           <div className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-purple-500" />
             <span className="text-sm text-muted-foreground">Mais Usada</span>
@@ -253,6 +253,8 @@ export const MensagensPage = () => {
           <p className="text-sm font-bold mt-2">Boas-vindas</p>
         </div>
       </div>
+
+
 
       {/* Modal de Cadastro/Edição/Preview */}
       <Modal
