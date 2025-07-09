@@ -46,10 +46,8 @@ Context API
 
 Componentização própria
 
-📂 Estrutura de Pastas (Exemplo)
-pgsql
-Copiar
-Editar
+📂 Estrutura de Pastas
+
 crm-app/
 ├── public/
 │   └── index.html
@@ -84,6 +82,8 @@ crm-app/
 ├── package.json
 ├── package-lock.json
 └── README.md
+
+
 🖥️ Demonstração Visual
 Gestão de contatos e agenda por semana/mês, inspirado em interfaces de CRMs e apps como Google Calendar, WhatsApp Business, PipeDrive.
 
