@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { QrCode, Smartphone, Wifi, WifiOff, Plus, RefreshCw, Settings, Eye, Trash2 } from 'lucide-react';
+import * as wahaService from '../services/wahaService';
 
 export const SessoesPage = () => {
   const [activeTab, setActiveTab] = useState('ativas');
   const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
 
-  // Dados fictícios de sessões
+  // Dados fictícios de sessões (pode depois buscar via API real)
   const sessions = {
     ativas: [
       {
@@ -60,8 +62,6 @@ export const SessoesPage = () => {
     ]
   };
 
-  const qrCodeData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
-
   const getStatusColor = (status) => {
     return status === 'conectado' 
       ? 'text-green-600 bg-green-100' 
@@ -76,8 +76,23 @@ export const SessoesPage = () => {
     );
   };
 
-  const handleConnectSession = () => {
-    setShowQRModal(true);
+  const handleConnectSession = async () => {
+    try {
+      // Criar sessão (ajuste payload conforme seu backend espera)
+      await wahaService.createSession({ sessionName: 'default' });
+
+      // Buscar QR code da sessão criada
+      const qrResp = await wahaService.getQr('default');
+
+      // Ajuste aqui para o nome do campo que retorna o QR code da sua API
+      setQrCodeData(qrResp.data.qrCode || qrResp.data);
+
+      // Abrir modal
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('Erro ao criar sessão ou buscar QR:', error);
+      alert('Erro ao criar sessão. Veja o console para detalhes.');
+    }
   };
 
   const SessionCard = ({ session, isActive }) => (
@@ -363,10 +378,12 @@ export const SessoesPage = () => {
                 Escaneie o QR Code com seu WhatsApp para conectar uma nova sessão
               </p>
               
-              <div className="bg-white p-4 rounded-lg border-2 border-dashed border-border mb-6">
-                <div className="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center">
-                  <QrCode className="h-24 w-24 text-gray-400" />
-                </div>
+              <div className="bg-white p-4 rounded-lg border-2 border-dashed border-border mb-6 flex items-center justify-center">
+                {qrCodeData ? (
+                  <img src={qrCodeData} alt="QR Code para conectar WhatsApp" className="w-48 h-48" />
+                ) : (
+                  <QrCode className="h-24 w-24 text-gray-400 animate-pulse" />
+                )}
               </div>
               
               <div className="flex items-center justify-center space-x-2 mb-6">
@@ -392,4 +409,3 @@ export const SessoesPage = () => {
     </div>
   );
 };
-

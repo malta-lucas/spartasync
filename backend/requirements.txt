@@ -1,0 +1,13 @@
+Django==5.1.6
+django-environ==0.12.0
+psycopg2-binary==2.9.10
+python-dotenv==1.1.0
+sqlparse==0.5.3
+requests==2.25.1
+openai==1.75.0
+# Se precisar de BeautifulSoup para algum parser:
+beautifulsoup4==4.10.0
+# Se usar Pillow para imagem:
+Pillow==9.0.1
+# Se usar qrcode:
+qrcode==7.3.1

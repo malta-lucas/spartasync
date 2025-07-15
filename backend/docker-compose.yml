@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres15
+    restart: always
+    environment:
+      POSTGRES_DB: spartasync
+      POSTGRES_USER: lucas
+      POSTGRES_PASSWORD: senha_segura
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  wahaplus:
+    image: devlikeapro/waha-plus:latest
+    container_name: wahaplus
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: .
+    container_name: spartasync-backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    environment:
+      DJANGO_SECRET_KEY: supersegredo
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      USE_POSTGRES: "True"
+      POSTGRES_DB: spartasync
+      POSTGRES_USER: lucas
+      POSTGRES_PASSWORD: senha_segura
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
