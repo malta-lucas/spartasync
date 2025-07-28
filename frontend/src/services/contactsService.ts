@@ -1,9 +1,5 @@
 // src/services/contactsService.ts
-
-import axios from "axios";
-
-// Defina o endereço da sua API
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api/contacts/";
+import api from './api'; // Importa o axios já com o interceptor de token
 
 // Tipo dos contatos (ajuste se necessário)
 export interface Contact {
@@ -23,31 +19,34 @@ export interface Contact {
   user_id?: number;
 }
 
+// Endereço da sua API (já fica correto pelo baseURL do api.ts)
+const ENDPOINT = 'contacts/';
+
 // Listar todos os contatos
 export async function getContacts() {
-  const response = await axios.get<Contact[]>(API_URL);
+  const response = await api.get<Contact[]>(ENDPOINT);
   return response.data;
 }
 
 // Criar um novo contato
 export async function createContact(contact: Contact) {
-  const response = await axios.post<Contact>(API_URL, contact);
+  const response = await api.post<Contact>(ENDPOINT, contact);
   return response.data;
 }
 
 // Atualizar um contato existente
 export async function updateContact(contactId: string, contact: Partial<Contact>) {
-  const response = await axios.put<Contact>(`${API_URL}${contactId}/`, contact);
+  const response = await api.put<Contact>(`${ENDPOINT}${contactId}/`, contact);
   return response.data;
 }
 
 // Deletar um contato
 export async function deleteContact(contactId: string) {
-  await axios.delete(`${API_URL}${contactId}/`);
+  await api.delete(`${ENDPOINT}${contactId}/`);
 }
 
 // Bulk create (criar vários contatos de uma vez)
 export async function bulkCreateContacts(contacts: Contact[]) {
-  const response = await axios.post(`${API_URL}bulk/`, { contacts });
+  const response = await api.post(`${ENDPOINT}bulk/`, { contacts });
   return response.data;
 }

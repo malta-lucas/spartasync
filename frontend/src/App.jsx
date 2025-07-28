@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
@@ -10,7 +10,6 @@ import { SessoesPage } from './pages/SessoesPage';
 import { PerfisPage } from './pages/PerfisPage';
 import { HistoricoPage } from './pages/HistoricoPage';
 import { CampanhasPage } from './pages/CampanhasPage';
-// ↓↓↓ AJUSTE AQUI ↓↓↓
 import AgendamentoPage from './pages/AgendamentoPage';
 import { EnvioPage } from './pages/EnvioPage';
 import { ConfiguracoesPage } from './pages/ConfiguracoesPage';
@@ -18,20 +17,60 @@ import { TagsPage } from './pages/TagsPage';
 import { TutorialPage } from './pages/TutorialPage';
 import { AjudaPage } from './pages/AjudaPage';
 import { AIAssistant } from './components/ai/AIAssistant';
+import { LoginPage } from './pages/LoginPage';
+// ATENÇÃO: Garanta que este nome/arquivo existe!
+import { SubscribeCompanyPage } from './pages/SubscribeCompanyPage';
 import './App.css';
 
-// Context para tema
-const ThemeContext = createContext();
+// ---- Auth Context
+const AuthContext = createContext();
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme deve ser usado dentro de um ThemeProvider');
+export const useAuth = () => useContext(AuthContext);
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+
+  function doLogin({ user, token }) {
+    setUser(user);
+    setToken(token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('token', token);
   }
-  return context;
-};
+  function doLogout() {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  }
 
-// Componente para centralizar e remover padding APENAS em /sessoes/conectar
+  return (
+    <AuthContext.Provider value={{ user, token, doLogin, doLogout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// ---- Protected Route
+function ProtectedRoute({ children }) {
+  const { user, token } = useAuth();
+  const location = useLocation();
+  if (!user || !token) return <Navigate to="/login" state={{ from: location }} replace />;
+  return children;
+}
+
+// ---- Theme Context
+const ThemeContext = createContext();
+export const useTheme = () => useContext(ThemeContext);
+
+// ---- MainContent (rotas internas protegidas)
 function MainContent({ sidebarCollapsed }) {
   const location = useLocation();
   const isSessoesNova = location.pathname === '/sessoes/conectar';
@@ -72,7 +111,6 @@ function MainContent({ sidebarCollapsed }) {
             <Route path="/campanhas/criar" element={<CampanhasPage />} />
             <Route path="/campanhas/performance" element={<CampanhasPage />} />
             <Route path="/tags" element={<TagsPage />} />
-            {/* ↓↓↓ AJUSTE AQUI ↓↓↓ */}
             <Route path="/agendamento" element={<AgendamentoPage />} />
             <Route path="/envio" element={<EnvioPage />} />
             <Route path="/envio/fila" element={<EnvioPage />} />
@@ -84,6 +122,8 @@ function MainContent({ sidebarCollapsed }) {
             <Route path="/ajuda/docs" element={<AjudaPage />} />
             <Route path="/ajuda/contato" element={<AjudaPage />} />
             <Route path="/tutorial" element={<TutorialPage />} />
+            {/* Fallback para rota inválida protegida */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       )}
@@ -91,6 +131,19 @@ function MainContent({ sidebarCollapsed }) {
   );
 }
 
+// ---- Fallback para rotas públicas não encontradas
+function NotFoundPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Página não encontrada</h2>
+        <p className="mb-4">Verifique a URL ou <a href="/" className="text-primary underline">volte ao início</a></p>
+      </div>
+    </div>
+  );
+}
+
+// ---- App Principal
 function App() {
   const [isDark, setIsDark] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -99,23 +152,37 @@ function App() {
     setIsDark(!isDark);
     document.documentElement.classList.toggle('dark');
   };
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
+  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      <Router>
-        <div className={`min-h-screen bg-background text-foreground ${isDark ? 'dark' : ''}`}>
-          <Header onToggleTheme={toggleTheme} onToggleSidebar={toggleSidebar} />
-          <div className="flex">
-            <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-            <MainContent sidebarCollapsed={sidebarCollapsed} />
-          </div>
-          <AIAssistant />
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/subscribe-company" element={<SubscribeCompanyPage />} />
+            <Route path="/not-found" element={<NotFoundPage />} />
+
+            {/* Rotas protegidas (coringa para todo o resto) */}
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <div className={`min-h-screen bg-background text-foreground ${isDark ? 'dark' : ''}`}>
+                    <Header onToggleTheme={toggleTheme} onToggleSidebar={toggleSidebar} />
+                    <div className="flex">
+                      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+                      <MainContent sidebarCollapsed={sidebarCollapsed} />
+                    </div>
+                    <AIAssistant />
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeContext.Provider>
   );
 }
