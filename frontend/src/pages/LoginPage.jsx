@@ -1,35 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
-import { ShieldCheck, LogIn, Eye, EyeOff, Building2 } from "lucide-react";
+import { ShieldCheck, LogIn, Eye, EyeOff, Building2, Loader2 } from "lucide-react";
 import { useAuth } from "../App";
+import { useBanner } from "../components/layout/BannerContext"; // <--- aqui
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { doLogin } = useAuth(); // <- use aqui
+  const { doLogin, user } = useAuth();
+  const { showBanner } = useBanner(); // <--- aqui
   const [form, setForm] = useState({ company: "", identifier: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
 
-  function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // Redireciona se já estiver autenticado
+  useEffect(() => {
+    if (user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
+  function handleChange(event) {
+    setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
     setLoading(true);
-    setError("");
+
     try {
       const response = await login({
+        company: form.company,
         username: form.identifier,
         password: form.password,
       });
-      // Use o contexto para login!
       doLogin({ user: response.user, token: response.token });
-      navigate("/"); // Redireciona para a home autenticada
+
+      // Mostra banner de sucesso
+      showBanner("success", "Login realizado com sucesso!");
+
+      navigate("/", { replace: true });
     } catch (err) {
-      setError("Dados inválidos. Verifique a empresa, e-mail/telefone e senha.");
+      // Mostra banner de erro
+      showBanner("error", "Dados inválidos. Verifique a empresa, e-mail/telefone e senha.");
     } finally {
       setLoading(false);
     }
@@ -50,11 +63,6 @@ export function LoginPage() {
             Digite sua empresa, e-mail ou telefone e senha para acessar seu painel.
           </span>
         </div>
-        {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 w-full text-center rounded-lg">
-            {error}
-          </div>
-        )}
         <div className="mb-4 w-full">
           <label className="block font-semibold mb-1 text-gray-800 flex items-center gap-1">
             <Building2 className="w-4 h-4 text-green-600" />
@@ -116,7 +124,11 @@ export function LoginPage() {
           disabled={loading}
           className="w-full bg-green-600 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2 text-lg hover:bg-green-700 transition"
         >
-          <LogIn className="h-5 w-5" />
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <LogIn className="h-5 w-5" />
+          )}
           {loading ? "Entrando..." : "Entrar"}
         </button>
         <p className="text-center mt-6 text-sm text-gray-600">

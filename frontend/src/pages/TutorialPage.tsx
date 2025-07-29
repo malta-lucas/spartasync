@@ -367,21 +367,45 @@ export const TutorialPage = () => {
           <span>Dicas Rápidas</span>
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">💡 Dica de Produtividade</h4>
-            <p className="text-sm text-muted-foreground">Use atalhos de teclado para navegar mais rapidamente pelo sistema.</p>
+          {/* Dica de Produtividade */}
+          <div className="p-4 bg-muted/30 rounded-lg flex items-start gap-3">
+            <i className="fi fi-br-lightbulb-on text-yellow-400 text-1xl mt-1"></i>
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Dica de Produtividade</h4>
+              <p className="text-sm text-muted-foreground">
+                Use atalhos de teclado para navegar mais rapidamente pelo sistema.
+              </p>
+            </div>
           </div>
-          <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">🎯 Melhores Práticas</h4>
-            <p className="text-sm text-muted-foreground">Organize seus contatos com tags desde o início para facilitar campanhas futuras.</p>
+          {/* Melhores Práticas */}
+          <div className="p-4 bg-muted/30 rounded-lg flex items-start gap-3">
+            <i className="fi fi-br-bullseye-arrow text-red-500 text-1xl mt-1"></i>
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Melhores Práticas</h4>
+              <p className="text-sm text-muted-foreground">
+                Organize seus contatos com tags desde o início para facilitar campanhas futuras.
+              </p>
+            </div>
           </div>
-          <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">📊 Análise de Dados</h4>
-            <p className="text-sm text-muted-foreground">Monitore regularmente as métricas do dashboard para otimizar suas estratégias.</p>
+          {/* Análise de Dados */}
+          <div className="p-4 bg-muted/30 rounded-lg flex items-start gap-3">
+            <i className="fi fi-br-chart-simple text-green-600 text-1xl mt-1"></i>
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Análise de Dados</h4>
+              <p className="text-sm text-muted-foreground">
+                Monitore regularmente as métricas do dashboard para otimizar suas estratégias.
+              </p>
+            </div>
           </div>
-          <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">🔄 Automação</h4>
-            <p className="text-sm text-muted-foreground">Configure campanhas automáticas para datas especiais como aniversários.</p>
+          {/* Automação */}
+          <div className="p-4 bg-muted/30 rounded-lg flex items-start gap-3">
+            <i className="fi fi-br-home-settings text-blue-600 text-1xl mt-1"></i>
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Automação</h4>
+              <p className="text-sm text-muted-foreground">
+                Configure campanhas automáticas para datas especiais como aniversários.
+              </p>
+            </div>
           </div>
         </div>
       </div>

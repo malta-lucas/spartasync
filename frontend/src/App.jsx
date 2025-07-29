@@ -1,5 +1,6 @@
 import React, { useState, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
@@ -18,13 +19,13 @@ import { TutorialPage } from './pages/TutorialPage';
 import { AjudaPage } from './pages/AjudaPage';
 import { AIAssistant } from './components/ai/AIAssistant';
 import { LoginPage } from './pages/LoginPage';
-// ATENÇÃO: Garanta que este nome/arquivo existe!
 import { SubscribeCompanyPage } from './pages/SubscribeCompanyPage';
+
+import { BannerProvider } from './components/layout/BannerContext'; // Banner global
 import './App.css';
 
 // ---- Auth Context
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 function AuthProvider({ children }) {
@@ -88,7 +89,7 @@ function MainContent({ sidebarCollapsed }) {
     >
       {isSessoesNova ? (
         <Routes>
-          <Route path="/sessoes/conectar" element={<SessoesNova />} />
+          {/* <Route path="/sessoes/conectar" element={<SessoesNova />} /> */}
         </Routes>
       ) : (
         <div className="p-6">
@@ -157,31 +158,33 @@ function App() {
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Rotas públicas */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/subscribe-company" element={<SubscribeCompanyPage />} />
-            <Route path="/not-found" element={<NotFoundPage />} />
+        <BannerProvider> {/* Banner global para toda a aplicação */}
+          <Router>
+            <Routes>
+              {/* Rotas públicas */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/subscribe-company" element={<SubscribeCompanyPage />} />
+              <Route path="/not-found" element={<NotFoundPage />} />
 
-            {/* Rotas protegidas (coringa para todo o resto) */}
-            <Route
-              path="*"
-              element={
-                <ProtectedRoute>
-                  <div className={`min-h-screen bg-background text-foreground ${isDark ? 'dark' : ''}`}>
-                    <Header onToggleTheme={toggleTheme} onToggleSidebar={toggleSidebar} />
-                    <div className="flex">
-                      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-                      <MainContent sidebarCollapsed={sidebarCollapsed} />
+              {/* Rotas protegidas */}
+              <Route
+                path="*"
+                element={
+                  <ProtectedRoute>
+                    <div className={`min-h-screen bg-background text-foreground ${isDark ? 'dark' : ''}`}>
+                      <Header onToggleTheme={toggleTheme} onToggleSidebar={toggleSidebar} />
+                      <div className="flex">
+                        <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+                        <MainContent sidebarCollapsed={sidebarCollapsed} />
+                      </div>
+                      <AIAssistant />
                     </div>
-                    <AIAssistant />
-                  </div>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Router>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
+        </BannerProvider>
       </AuthProvider>
     </ThemeContext.Provider>
   );

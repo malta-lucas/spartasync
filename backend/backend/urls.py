@@ -10,8 +10,10 @@ urlpatterns = [
 
     # Suas rotas principais
     path('api/', include('core.urls')),
+    path('api/search/', include('search.urls')),
     path('api/waha/', include('wahaplus.urls')),
     path('api/contacts/', include('contacts.urls')),
+    path('api/tags/', include('tags.urls')),
 
     # Endpoints JWT para autenticação
     path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

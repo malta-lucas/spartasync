@@ -1,52 +1,90 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Search, 
-  Bell, 
-  MessageSquare, 
-  Settings, 
-  User, 
-  Sun, 
-  Moon, 
-  Menu,
-  ChevronDown
+  Search, Bell, MessageSquare, Settings, User, Sun, Moon, Menu, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../App';
+import { globalSearch } from '../../services/searchService'; // Ajuste o caminho se necessário
 
 export const Header = ({ onToggleTheme, onToggleSidebar }) => {
+  // Dropdowns padrões
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
   const [showMessagesDropdown, setShowMessagesDropdown] = useState(false);
   const [isDark, setIsDark] = useState(false);
+
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [searchFocus, setSearchFocus] = useState(false);
 
+  // Refs para fechar dropdowns ao clicar fora
   const notifRef = useRef();
   const msgRef = useRef();
   const profileRef = useRef();
+  const searchRef = useRef();
+
+  const navigate = useNavigate();
+  const { doLogout } = useAuth();
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    function handleClickOutside(event) {
       if (
         notifRef.current && !notifRef.current.contains(event.target) &&
         msgRef.current && !msgRef.current.contains(event.target) &&
-        profileRef.current && !profileRef.current.contains(event.target)
+        profileRef.current && !profileRef.current.contains(event.target) &&
+        searchRef.current && !searchRef.current.contains(event.target)
       ) {
         setShowNotificationsDropdown(false);
         setShowMessagesDropdown(false);
         setShowProfileDropdown(false);
+        setShowSearchDropdown(false);
       }
-    };
-
-    if (showProfileDropdown || showNotificationsDropdown || showMessagesDropdown) {
+    }
+    if (
+      showProfileDropdown ||
+      showNotificationsDropdown ||
+      showMessagesDropdown ||
+      showSearchDropdown
+    ) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showProfileDropdown, showNotificationsDropdown, showMessagesDropdown]);
+  }, [
+    showProfileDropdown,
+    showNotificationsDropdown,
+    showMessagesDropdown,
+    showSearchDropdown
+  ]);
 
   const handleThemeToggle = () => {
     setIsDark(!isDark);
     onToggleTheme();
   };
 
+  const handleLogout = () => {
+    doLogout();
+    navigate('/login');
+  };
+
+  const handleSearch = async (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      setSearchLoading(true);
+      setShowSearchDropdown(true);
+      try {
+        const results = await globalSearch(searchTerm);
+        setSearchResults(results);
+      } catch {
+        setSearchResults(null);
+      }
+      setSearchLoading(false);
+    }
+  };
+
+  // Exemplo de dados
   const notifications = [
     { id: 1, title: 'Nova mensagem', message: 'João Silva enviou uma mensagem', time: '5 min' },
     { id: 2, title: 'Reunião agendada', message: 'Reunião com cliente às 14h', time: '1 h' },
@@ -59,19 +97,11 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
     { id: 3, sender: 'Ana Costa', message: 'Obrigada pelo atendimento!', time: '1 h', avatar: '👩' }
   ];
 
-  // Config da animação dos menus dropdown
   const dropdownMotion = {
     initial: { scaleY: 0, opacity: 0, originY: 0 },
     animate: { scaleY: 1, opacity: 1, originY: 0 },
     exit:    { scaleY: 0, opacity: 0, originY: 0 },
     transition: { duration: 0.25, ease: [0.43, 0.13, 0.23, 0.96] }
-  };
-
-  // Animação da barra de pesquisa
-  const searchMotion = {
-    initial: { boxShadow: "0px 0px 0px rgba(34,197,94,0)", scale: 1 },
-    animate: { boxShadow: searchFocus ? "0px 4px 24px rgba(34,197,94,0.13)" : "0px 0px 0px rgba(34,197,94,0)", scale: searchFocus ? 1.03 : 1 },
-    transition: { duration: 0.25 }
   };
 
   return (
@@ -94,7 +124,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
         </div>
 
         {/* Barra de Pesquisa */}
-        <div className="flex-1 max-w-md mx-4">
+        <div className="flex-1 max-w-md mx-4 relative" ref={searchRef}>
           <div
             className={`
               relative
@@ -112,9 +142,73 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
                 transition-all duration-200
               `}
-              onFocus={() => setSearchFocus(true)}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onFocus={() => {
+                setSearchFocus(true);
+                if (searchResults) setShowSearchDropdown(true);
+              }}
               onBlur={() => setSearchFocus(false)}
+              onKeyDown={handleSearch}
             />
+            {/* Dropdown de resultados */}
+            <AnimatePresence>
+              {showSearchDropdown && (
+                <motion.div
+                  key="search-dropdown"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50"
+                >
+                  <div className="p-2">
+                    {searchLoading && (
+                      <div className="text-muted-foreground px-2 py-1 text-center">
+                        Buscando...
+                      </div>
+                    )}
+                    {!searchLoading && searchResults && (
+                      <>
+                        {searchResults.tags?.results.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 font-semibold text-primary text-xs">Tags</div>
+                            {searchResults.tags.results.map(tag => (
+                              <div
+                                key={tag.id}
+                                className="px-2 py-1 hover:bg-accent rounded cursor-pointer text-sm"
+                              >
+                                <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: tag.color }}></span>
+                                {tag.title}
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {searchResults.contacts?.results.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 font-semibold text-primary text-xs mt-2">Contatos</div>
+                            {searchResults.contacts.results.map(contact => (
+                              <div
+                                key={contact.id}
+                                className="px-2 py-1 hover:bg-accent rounded cursor-pointer text-sm"
+                              >
+                                {contact.name} <span className="text-muted-foreground ml-2 text-xs">{contact.email}</span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {searchResults.tags?.results.length === 0 &&
+                          searchResults.contacts?.results.length === 0 && (
+                            <div className="text-muted-foreground px-2 py-1">
+                              Nenhum resultado encontrado.
+                            </div>
+                          )}
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -136,6 +230,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                 setShowNotificationsDropdown(!showNotificationsDropdown);
                 setShowMessagesDropdown(false);
                 setShowProfileDropdown(false);
+                setShowSearchDropdown(false);
               }}
               className="p-2 rounded-lg hover:bg-accent transition-colors relative"
               title="Notificações"
@@ -183,6 +278,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                 setShowMessagesDropdown(!showMessagesDropdown);
                 setShowNotificationsDropdown(false);
                 setShowProfileDropdown(false);
+                setShowSearchDropdown(false);
               }}
               className="p-2 rounded-lg hover:bg-accent transition-colors relative"
               title="Mensagens"
@@ -243,6 +339,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                 setShowProfileDropdown(!showProfileDropdown);
                 setShowNotificationsDropdown(false);
                 setShowMessagesDropdown(false);
+                setShowSearchDropdown(false);
               }}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
             >
@@ -274,7 +371,10 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                       Ajuda
                     </button>
                     <hr className="my-2 border-border" />
-                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-accent text-red-600">
+                    <button
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent text-red-600"
+                      onClick={handleLogout}
+                    >
                       Sair
                     </button>
                   </div>

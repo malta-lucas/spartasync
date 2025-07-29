@@ -152,3 +152,14 @@ export interface Appointment {
   localizacao?: string;
 }
 
+export interface Tag {
+  id: number;
+  title: string;
+  color: string;
+  content: string;
+  user_company: number; // ForeignKey sempre como number (ID)
+  created_at: string;
+  updated_at: string;
+  last_use: string | null;
+  contactCount: number; // calculado no serializer do backend!
+}

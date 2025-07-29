@@ -1,5 +1,5 @@
-import api from './api'; // Importa o api.ts já com interceptor de token
-import axios from 'axios'; // Usado apenas para login/register que ainda não tem token
+import api from './api'; // Seu axios customizado
+import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/';
 
@@ -13,11 +13,11 @@ export interface RegisterCompanyData {
 }
 
 export interface LoginData {
-  username: string;  // Aqui pode ser email, telefone ou username, dependendo do seu backend
+  username: string;
   password: string;
+  company?: string;
 }
 
-// Caso queira tipar o response (opcional)
 export interface AuthResponse {
   refresh?: string;
   access?: string;
@@ -32,14 +32,32 @@ export interface AuthResponse {
 }
 
 // Cadastro de empresa + usuário admin (normalmente não exige token)
-export async function registerCompany(data: RegisterCompanyData) {
-  // Pode usar api.post ou axios.post, ambos funcionam aqui
+export async function registerCompany(data: RegisterCompanyData): Promise<any> {
   const response = await axios.post(`${API_URL}register-company/`, data);
   return response.data;
 }
 
-// Login com JWT (retorna access e refresh)
-export async function login(data: LoginData) {
+export async function login(data: LoginData): Promise<{ user: AuthResponse['user'], token: string }> {
+  // O Axios infere o tipo pelo <AuthResponse>
   const response = await axios.post<AuthResponse>(`${API_URL}auth/login/`, data);
-  return response.data;
+
+  const accessToken = response.data.access ?? '';
+  if (!accessToken) throw new Error('Token de acesso não recebido');
+
+  const profile = await axios.get<AuthResponse['user']>(`${API_URL}auth/me/`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return {
+    user: profile.data,
+    token: accessToken,
+  };
+}
+
+// ---- LOGOUT ----
+export function logout() {
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
 }

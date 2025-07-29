@@ -20,7 +20,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'wahaplus',
-    'contacts'
+    'contacts',
+    'tags',
 ]
 
 MIDDLEWARE = [

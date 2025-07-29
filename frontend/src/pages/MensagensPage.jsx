@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { 
   MessageSquare, 
@@ -11,15 +11,16 @@ import {
   Copy,
   Calendar
 } from 'lucide-react';
+import { useBanner } from '../components/layout/BannerContext';
 
 export const MensagensPage = () => {
+  const { showBanner } = useBanner();
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
 
-  // Dados de exemplo
-  const mensagens = [
+  const [mensagens, setMensagens] = useState([
     {
       id: 1,
       titulo: 'Promoção de Verão',
@@ -50,7 +51,15 @@ export const MensagensPage = () => {
       ultimoUso: '2024-06-05',
       vezesUsada: 78
     }
-  ];
+  ]);
+
+  const [form, setForm] = useState({
+    titulo: '',
+    tipo: 'informativo',
+    conteudo: '',
+  });
+
+  const textareaRef = useRef();
 
   const getTipoColor = (tipo) => {
     const colors = {
@@ -64,8 +73,6 @@ export const MensagensPage = () => {
 
   const processarVariaveis = (conteudo, dadosContato = {}) => {
     let textoProcessado = conteudo;
-    
-    // Dados de exemplo para preview
     const dadosExemplo = {
       nome: 'João Silva',
       ultimaCompra: '15/05/2024',
@@ -74,12 +81,10 @@ export const MensagensPage = () => {
       empresa: 'Tech Solutions',
       ...dadosContato
     };
-
     Object.keys(dadosExemplo).forEach(variavel => {
       const regex = new RegExp(`{{${variavel}}}`, 'g');
       textoProcessado = textoProcessado.replace(regex, dadosExemplo[variavel]);
     });
-
     return textoProcessado;
   };
 
@@ -88,6 +93,111 @@ export const MensagensPage = () => {
     mensagem.conteudo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mensagem.tipo.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // HANDLERS CRUD + FEEDBACK
+  const handleCopy = (mensagem) => {
+    navigator.clipboard.writeText(mensagem.conteudo);
+    showBanner('success', `Mensagem "${mensagem.titulo}" copiada com sucesso!`);
+  };
+
+  const handleDelete = (id) => {
+    setMensagens((old) => old.filter(m => m.id !== id));
+    if (selectedMessage && selectedMessage.id === id) {
+      setShowModal(false);
+      setSelectedMessage(null);
+      setPreviewMode(false);
+      setForm({ titulo: '', tipo: 'informativo', conteudo: '' });
+    }
+    showBanner('success', 'Mensagem excluída com sucesso!');
+  };
+
+  const handleEdit = (mensagem) => {
+    setSelectedMessage(mensagem);
+    setForm({
+      titulo: mensagem.titulo,
+      tipo: mensagem.tipo,
+      conteudo: mensagem.conteudo,
+    });
+    setPreviewMode(false);
+    setShowModal(true);
+  };
+
+  // Salvar nova ou atualizar
+  const handleSave = () => {
+    if (!form.titulo.trim() || !form.conteudo.trim()) {
+      showBanner('error', 'Preencha o título e o conteúdo da mensagem.');
+      return;
+    }
+    if (selectedMessage) {
+      setMensagens((old) =>
+        old.map(m =>
+          m.id === selectedMessage.id
+            ? {
+                ...m,
+                titulo: form.titulo,
+                tipo: form.tipo,
+                conteudo: form.conteudo,
+                variaveis: (form.conteudo.match(/{{(.*?)}}/g) || []).map(v => v.replace(/[{}]/g, '')),
+              }
+            : m
+        )
+      );
+      showBanner('success', `Mensagem "${form.titulo}" atualizada com sucesso!`);
+    } else {
+      setMensagens((old) => [
+        ...old,
+        {
+          id: Date.now(),
+          titulo: form.titulo,
+          tipo: form.tipo,
+          conteudo: form.conteudo,
+          variaveis: (form.conteudo.match(/{{(.*?)}}/g) || []).map(v => v.replace(/[{}]/g, '')),
+          dataCriacao: new Date().toISOString().split('T')[0],
+          ultimoUso: '',
+          vezesUsada: 0
+        }
+      ]);
+      showBanner('success', `Mensagem "${form.titulo}" criada com sucesso!`);
+    }
+    setShowModal(false);
+    setSelectedMessage(null);
+    setForm({ titulo: '', tipo: 'informativo', conteudo: '' });
+  };
+
+  // Adiciona variável no cursor do textarea
+  const handleInsertVariable = (variavel) => {
+    const insert = `{{${variavel}}}`;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const { selectionStart, selectionEnd, value } = textarea;
+      setForm(f => ({
+        ...f,
+        conteudo:
+          value.slice(0, selectionStart) + insert + value.slice(selectionEnd)
+      }));
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          selectionStart + insert.length,
+          selectionStart + insert.length
+        );
+      }, 10);
+    } else {
+      setForm(f => ({
+        ...f,
+        conteudo: f.conteudo + ' ' + insert
+      }));
+    }
+    showBanner('info', `Variável {{${variavel}}} adicionada ao conteúdo.`);
+  };
+
+  // Abre modal para nova mensagem
+  const handleNovaMensagem = () => {
+    setShowModal(true);
+    setSelectedMessage(null);
+    setForm({ titulo: '', tipo: 'informativo', conteudo: '' });
+    setPreviewMode(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -98,7 +208,7 @@ export const MensagensPage = () => {
           <p className="text-muted-foreground mt-1">Crie e gerencie templates de mensagens com variáveis</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleNovaMensagem}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
@@ -146,17 +256,14 @@ export const MensagensPage = () => {
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => {
-                    setSelectedMessage(mensagem);
-                    setPreviewMode(false);
-                    setShowModal(true);
-                  }}
+                  onClick={() => handleEdit(mensagem)}
                   className="p-1 rounded hover:bg-accent transition-colors"
                   title="Editar"
                 >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button
+                  onClick={() => handleDelete(mensagem.id)}
                   className="p-1 rounded hover:bg-accent transition-colors text-red-600"
                   title="Excluir"
                 >
@@ -195,7 +302,7 @@ export const MensagensPage = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Último uso:</span>
-                <span>{new Date(mensagem.ultimoUso).toLocaleDateString('pt-BR')}</span>
+                <span>{mensagem.ultimoUso ? new Date(mensagem.ultimoUso).toLocaleDateString('pt-BR') : '-'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Vezes usada:</span>
@@ -209,7 +316,7 @@ export const MensagensPage = () => {
                 <span>Enviar</span>
               </button>
               <button
-                onClick={() => navigator.clipboard.writeText(mensagem.conteudo)}
+                onClick={() => handleCopy(mensagem)}
                 className="px-3 py-2 border border-border rounded-lg hover:bg-accent transition-colors"
                 title="Copiar"
               >
@@ -254,14 +361,13 @@ export const MensagensPage = () => {
         </div>
       </div>
 
-
-
       {/* Modal de Cadastro/Edição/Preview */}
       <Modal
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setSelectedMessage(null);
+          setForm({ titulo: '', tipo: 'informativo', conteudo: '' });
           setPreviewMode(false);
         }}
         title={previewMode ? 'Preview da Mensagem' : (selectedMessage ? 'Editar Mensagem' : 'Nova Mensagem')}
@@ -298,16 +404,17 @@ export const MensagensPage = () => {
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                defaultValue={selectedMessage?.titulo || ''}
+                value={form.titulo}
                 placeholder="Ex: Promoção de Verão"
+                onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
               />
             </div>
-            
             <div>
               <label className="block text-sm font-medium mb-2">Tipo</label>
               <select
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                defaultValue={selectedMessage?.tipo || 'informativo'}
+                value={form.tipo}
+                onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}
               >
                 <option value="promocional">Promocional</option>
                 <option value="cobranca">Cobrança</option>
@@ -315,17 +422,17 @@ export const MensagensPage = () => {
                 <option value="personalizado">Personalizado</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Conteúdo da Mensagem</label>
               <textarea
+                ref={textareaRef}
                 rows={6}
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                defaultValue={selectedMessage?.conteudo || ''}
+                value={form.conteudo}
                 placeholder="Digite sua mensagem aqui. Use {{variavel}} para inserir dados dinâmicos."
+                onChange={e => setForm(f => ({ ...f, conteudo: e.target.value }))}
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Variáveis Disponíveis</label>
               <p className="text-sm text-muted-foreground mb-2">
@@ -336,27 +443,40 @@ export const MensagensPage = () => {
                   <button
                     key={variavel}
                     className="px-2 py-1 bg-primary/10 text-primary text-sm rounded hover:bg-primary/20 transition-colors"
-                    onClick={() => {
-                      // Lógica para inserir variável no textarea
-                    }}
+                    onClick={() => handleInsertVariable(variavel)}
+                    type="button"
                   >
                     {`{{${variavel}}}`}
                   </button>
                 ))}
               </div>
             </div>
-
             <div className="flex justify-end space-x-3 pt-4">
+              {selectedMessage && (
+                <button
+                  onClick={() => handleDelete(selectedMessage.id)}
+                  className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  type="button"
+                >
+                  Excluir
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowModal(false);
                   setSelectedMessage(null);
+                  setForm({ titulo: '', tipo: 'informativo', conteudo: '' });
                 }}
                 className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors"
+                type="button"
               >
                 Cancelar
               </button>
-              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                type="button"
+              >
                 {selectedMessage ? 'Atualizar' : 'Salvar'}
               </button>
             </div>
@@ -366,4 +486,3 @@ export const MensagensPage = () => {
     </div>
   );
 };
-
