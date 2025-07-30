@@ -10,17 +10,33 @@ class SidebarStatsView(APIView):
 
     def get(self, request):
         user_company = getattr(request.user, "company", None)
-        filter_kwargs = {"company": user_company} if user_company else {}
+        if not user_company:
+            return Response({
+                "telefone": 0,
+                "contatos": 0,
+                "grupos": 0,
+                "mensagens": 0,
+                "campanhas": 0,
+                "tags": 0,
+                "sessoes_ativas": 0,
+                "sessoes_historico": 0,
+                "agendamentos": 0,
+                "envios_programados": 0,
+                "fila_envio": 0,
+                "historico": 0
+            })
 
         return Response({
-            "contatos": Contact.objects.filter(is_deleted=False).count(),
+            "telefone": 0,
+            "contatos": Contact.objects.filter(is_deleted=False, company=user_company).count(),
             "grupos": 0,
             "mensagens": 0,
             "campanhas": 0,
-            "tags": Tag.objects.filter(is_deleted=False).count(),
+            "tags": Tag.objects.filter(is_deleted=False, user_company=user_company).count(),
             "sessoes_ativas": 0,
             "sessoes_historico": 0,
             "agendamentos": 0,
             "envios_programados": 0,
-            "fila_envio": 0
+            "fila_envio": 0,
+            "historico": 0
         })

@@ -20,6 +20,8 @@ import { AjudaPage } from './pages/AjudaPage';
 import { AIAssistant } from './components/ai/AIAssistant';
 import { LoginPage } from './pages/LoginPage';
 import { SubscribeCompanyPage } from './pages/SubscribeCompanyPage';
+import HierarquiaPage from './pages/HierarquiaPage';
+import UsuariosPage from './pages/UsuariosPage';
 
 import { BannerProvider } from './components/layout/BannerContext';
 import './App.css';
@@ -126,6 +128,8 @@ function MainContent({ sidebarCollapsed }) {
             <Route path="/envio/relatorios" element={<EnvioPage />} />
             <Route path="/configuracoes/perfil" element={<ConfiguracoesPage />} />
             <Route path="/configuracoes/sistema" element={<ConfiguracoesPage />} />
+            <Route path="/configuracoes/sistema/usuarios" element={<UsuariosPage />} />
+            <Route path="/configuracoes/sistema/hierarquia" element={<HierarquiaPage />} />
             <Route path="/configuracoes/integracoes" element={<ConfiguracoesPage />} />
             <Route path="/ajuda/faq" element={<AjudaPage />} />
             <Route path="/ajuda/docs" element={<AjudaPage />} />

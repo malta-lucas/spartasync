@@ -1,0 +1,17 @@
+body, .main-header, .main-footer, .main-sidebar {
+    font-family: 'Inter', 'Fira Sans', 'Roboto', Arial, sans-serif !important;
+}
+.btn-primary, .btn-info, .btn-success, .btn-danger {
+    border-radius: 8px !important;
+    font-size: 15px;
+}
+.card, .content, .main-header {
+    border-radius: 16px !important;
+}
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+.bg-primary {
+    background-color: #10B981 !important; /* verde igual seu React */
+}

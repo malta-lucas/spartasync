@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Tag
@@ -6,12 +6,21 @@ from .serializers import TagSerializer
 from contacts.serializers import ContactSerializer
 
 class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.none()
     serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Só retorna tags NÃO deletadas
-        return Tag.objects.filter(is_deleted=False)
+        user = self.request.user
+        if user.is_anonymous:
+            return Tag.objects.none()
+        return Tag.objects.filter(
+            is_deleted=False,
+            user_company=user.company
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(user_company=self.request.user.company)
 
     @action(detail=True, methods=['get'])
     def contacts(self, request, pk=None):

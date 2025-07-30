@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register(r'companies', CompanyViewSet)
 router.register(r'plans', PlanViewSet)
 router.register(r'roles', RoleViewSet)
-router.register(r'users', UserViewSet)
+router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),

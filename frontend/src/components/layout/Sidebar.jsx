@@ -6,7 +6,6 @@ import {
   History, UserCheck
 } from 'lucide-react';
 
-// Importe o service de stats
 import { fetchSidebarStats } from '../../services/sidebarStatsService';
 
 export const Sidebar = ({ collapsed, onToggle }) => {
@@ -20,6 +19,13 @@ export const Sidebar = ({ collapsed, onToggle }) => {
       .catch(() => setStats(null));
   }, []);
 
+  const badgeValue = (val) => {
+    if (val === 0) return '';
+    if (val === undefined || val === null) return '...';
+    return val;
+  };
+
+  // Chave composta para menus aninhados (para evitar conflitos)
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
       ...prev,
@@ -30,6 +36,7 @@ export const Sidebar = ({ collapsed, onToggle }) => {
   const isActive = (path) => location.pathname === path;
   const isMenuActive = (paths) => paths.some(path => location.pathname === path);
 
+  // --------- Menus ---------
   const menuItems = [
     {
       category: 'GERAL',
@@ -39,24 +46,24 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Home,
           label: 'Dashboard',
           path: '/',
-          badge: stats ? stats.contatos : '...',
+          badge: stats ? badgeValue(stats.contatos) : '...',
         },
         {
           key: 'telefone',
           icon: Phone,
           label: 'Telefone',
           path: '/telefone',
-          badge: stats ? stats.telefone : '...',
+          badge: stats ? badgeValue(stats.telefone) : '...',
         },
         {
           key: 'sessoes',
           icon: UserCheck,
           label: 'Sessões',
           hasSubmenu: true,
-          badge: stats ? stats.sessoes_ativas : '...',
+          badge: stats ? badgeValue(stats.sessoes_ativas) : '...',
           submenu: [
-            { label: 'Sessões Ativas', path: '/sessoes/ativas', badge: stats ? stats.sessoes_ativas : undefined },
-            { label: 'Histórico', path: '/sessoes/historico', badge: stats ? stats.sessoes_historico : undefined }
+            { label: 'Sessões Ativas', path: '/sessoes/ativas', badge: stats ? badgeValue(stats.sessoes_ativas) : undefined },
+            { label: 'Histórico', path: '/sessoes/historico', badge: stats ? badgeValue(stats.sessoes_historico) : undefined }
           ]
         },
         {
@@ -64,10 +71,10 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Users,
           label: 'Contatos',
           hasSubmenu: true,
-          badge: stats ? stats.contatos : '...',
+          badge: stats ? badgeValue(stats.contatos) : '...',
           submenu: [
-            { label: 'Todos os Contatos', path: '/contatos', badge: stats ? stats.contatos : undefined },
-            { label: 'Grupos', path: '/contatos/grupos', badge: stats ? stats.grupos : undefined },
+            { label: 'Todos os Contatos', path: '/contatos', badge: stats ? badgeValue(stats.contatos) : undefined },
+            { label: 'Grupos', path: '/contatos/grupos', badge: stats ? badgeValue(stats.grupos) : undefined },
             { label: 'Importar/Exportar', path: '/contatos/importar' }
           ]
         }
@@ -81,9 +88,9 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: MessageSquare,
           label: 'Mensagens',
           hasSubmenu: true,
-          badge: stats ? stats.mensagens : '...',
+          badge: stats ? badgeValue(stats.mensagens) : '...',
           submenu: [
-            { label: 'Templates', path: '/mensagens', badge: stats ? stats.mensagens : undefined },
+            { label: 'Templates', path: '/mensagens', badge: stats ? badgeValue(stats.mensagens) : undefined },
             { label: 'Envio Individual', path: '/mensagens/individual' },
             { label: 'Histórico de Envios', path: '/mensagens/historico' }
           ]
@@ -93,17 +100,17 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Calendar,
           label: 'Agendamento',
           path: '/agendamento',
-          badge: stats ? stats.agendamentos : '...'
+          badge: stats ? badgeValue(stats.agendamentos) : '...'
         },
         {
           key: 'envio',
           icon: Send,
           label: 'Envio',
           hasSubmenu: true,
-          badge: stats ? stats.envios_programados : '...',
+          badge: stats ? badgeValue(stats.envios_programados) : '...',
           submenu: [
-            { label: 'Envios Programados', path: '/envio', badge: stats ? stats.envios_programados : undefined },
-            { label: 'Fila de Envio', path: '/envio/fila', badge: stats ? stats.fila_envio : undefined },
+            { label: 'Envios Programados', path: '/envio', badge: stats ? badgeValue(stats.envios_programados) : undefined },
+            { label: 'Fila de Envio', path: '/envio/fila', badge: stats ? badgeValue(stats.fila_envio) : undefined },
             { label: 'Relatórios', path: '/envio/relatorios' }
           ]
         }
@@ -116,29 +123,24 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           key: 'campanhas',
           icon: Megaphone,
           label: 'Campanhas',
-          hasSubmenu: true,
-          badge: stats ? stats.campanhas : '...',
-          submenu: [
-            { label: 'Todas as Campanhas', path: '/campanhas', badge: stats ? stats.campanhas : undefined },
-            { label: 'Criar Campanha', path: '/campanhas/criar' },
-            { label: 'Performance', path: '/campanhas/performance' }
-          ]
+          path: '/campanhas',
+          badge: stats ? badgeValue(stats.campanhas) : '...',
         },
         {
           key: 'tags',
           icon: Tag,
           label: 'Tags',
           path: '/tags',
-          badge: stats ? stats.tags : '...'
+          badge: stats ? badgeValue(stats.tags) : '...'
         },
         {
           key: 'historico',
           icon: History,
           label: 'Histórico',
           hasSubmenu: true,
-          badge: stats ? stats.historico : '...',
+          badge: stats ? badgeValue(stats.historico) : '...',
           submenu: [
-            { label: 'Atividades', path: '/historico', badge: stats ? stats.historico : undefined },
+            { label: 'Atividades', path: '/historico', badge: stats ? badgeValue(stats.historico) : undefined },
             { label: 'Alterações', path: '/historico/alteracoes' },
             { label: 'Logs do Sistema', path: '/historico/logs' }
           ]
@@ -182,24 +184,101 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           label: 'Configurações',
           hasSubmenu: true,
           submenu: [
-            { label: 'Perfil', path: '/configuracoes/perfil' },
-            { label: 'Sistema', path: '/configuracoes/sistema' },
-            { label: 'Integrações', path: '/configuracoes/integracoes' }
+            {
+              label: 'Perfil',
+              path: '/configuracoes/perfil',
+            },
+            {
+              label: 'Sistema',
+              hasSubmenu: true,
+              submenu: [
+                {
+                  label: 'Geral',
+                  path: '/configuracoes/sistema',
+                },
+                {
+                  label: 'Hierarquia',
+                  path: '/configuracoes/sistema/hierarquia',
+                },
+                // ADICIONE AQUI:
+                {
+                  label: 'Usuários',
+                  path: '/configuracoes/sistema/usuarios',
+                },
+                {
+                  label: 'Integrações',
+                  path: '/configuracoes/integracoes',
+                }
+              ],
+            },
+            {
+              label: 'Integrações',
+              path: '/configuracoes/integracoes',
+            }
           ]
         }
       ]
     }
   ];
 
+  // --------- SUBMENU RENDER RECURSIVO ----------
+  const renderSubmenu = (submenu, parentKey = '') => (
+    <div className="mt-1 ml-8 space-y-1">
+      {submenu.map((item, index) =>
+        item.hasSubmenu ? (
+          <div key={parentKey + item.label + index}>
+            <button
+              onClick={() => toggleMenu(parentKey + item.label)}
+              className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors duration-200 hover:bg-accent hover:text-accent-foreground text-muted-foreground`}
+              type="button"
+            >
+              <span>{item.label}</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${
+                  expandedMenus[parentKey + item.label] ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            {expandedMenus[parentKey + item.label] && renderSubmenu(item.submenu, parentKey + item.label)}
+          </div>
+        ) : (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`block px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
+              isActive(item.path)
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            }`}
+            style={{ cursor: 'pointer' }}
+          >
+            {item.label}
+            {item.badge !== '' && item.badge !== undefined && (
+              <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-medium bg-muted text-muted-foreground">
+                {item.badge}
+              </span>
+            )}
+          </Link>
+        )
+      )}
+    </div>
+  );
+
+  // --------- MENU ITEM RENDER ---------
   const renderMenuItem = (item) => {
     const Icon = item.icon;
     const isItemActive = item.hasSubmenu 
-      ? isMenuActive(item.submenu.map(sub => sub.path))
+      ? isMenuActive(
+          (item.submenu || []).flatMap(sub =>
+            sub.path ? [sub.path] : (sub.submenu || []).map(s => s.path)
+          )
+        )
       : isActive(item.path);
+
     const isExpanded = expandedMenus[item.key];
 
     return (
-      <div key={item.key} className="mb-1">
+      <div key={item.key || item.label} className="mb-1">
         {item.hasSubmenu ? (
           <button
             onClick={() => toggleMenu(item.key)}
@@ -211,11 +290,11 @@ export const Sidebar = ({ collapsed, onToggle }) => {
             type="button"
           >
             <div className="flex items-center space-x-3">
-              <Icon className={`h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />
+              {Icon && <Icon className={`h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />}
               {!collapsed && (
                 <>
                   <span>{item.label}</span>
-                  {item.badge && (
+                  {item.badge !== '' && item.badge !== undefined && (
                     <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
                       isItemActive 
                         ? 'bg-primary-foreground/20 text-primary-foreground' 
@@ -243,11 +322,11 @@ export const Sidebar = ({ collapsed, onToggle }) => {
             }`}
           >
             <div className="flex items-center space-x-3">
-              <Icon className={`h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />
+              {Icon && <Icon className={`h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />}
               {!collapsed && (
                 <>
                   <span>{item.label}</span>
-                  {item.badge && (
+                  {item.badge !== '' && item.badge !== undefined && (
                     <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
                       isItemActive 
                         ? 'bg-primary-foreground/20 text-primary-foreground' 
@@ -262,29 +341,9 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           </Link>
         )}
 
-        {/* Submenu */}
-        {item.hasSubmenu && isExpanded && !collapsed && (
-          <div className="mt-1 ml-8 space-y-1">
-            {item.submenu.map((subItem, index) => (
-              <Link
-                key={index}
-                to={subItem.path}
-                className={`block px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
-                  isActive(subItem.path)
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                }`}
-                style={{ cursor: 'pointer' }}
-              >
-                {subItem.label}
-                {subItem.badge !== undefined && (
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-medium bg-muted text-muted-foreground">
-                    {subItem.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
+        {/* SUBMENU: recursivo */}
+        {item.hasSubmenu && isExpanded && !collapsed && item.submenu && (
+          renderSubmenu(item.submenu, item.key)
         )}
       </div>
     );
@@ -301,12 +360,12 @@ export const Sidebar = ({ collapsed, onToggle }) => {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r border-border z-50 transition-all duration-300 ${
+      <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-transparent border-r border-border z-50 transition-all duration-300 ${
         collapsed ? 'w-20' : 'w-64'
       } lg:translate-x-0 ${collapsed ? 'translate-x-0' : 'translate-x-0'}`}>
         
         {/* Sidebar Content */}
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <div className="h-full overflow-y-auto sidebar-scroll">
           <div className="p-4 space-y-6">
             {menuItems.map((section) => (
               <div key={section.category}>

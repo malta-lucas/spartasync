@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { HelpCircle, Search, Book, MessageCircle, Phone, Mail, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 
 export const AjudaPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('faq');
   const [expandedFAQ, setExpandedFAQ] = useState(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sincroniza a aba ativa com a URL
+  useEffect(() => {
+    if (location.pathname.endsWith('/faq')) {
+      setActiveCategory('faq');
+    } else if (location.pathname.endsWith('/docs')) {
+      setActiveCategory('docs');
+    } else if (location.pathname.endsWith('/contato')) {
+      setActiveCategory('contato');
+    } else {
+      // Redireciona para FAQ se rota não reconhecida
+      navigate('/ajuda/faq', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  // Quando trocar de aba, navegue para a rota correta!
+  const handleTabChange = (cat) => {
+    if (cat === 'faq') navigate('/ajuda/faq');
+    if (cat === 'docs') navigate('/ajuda/docs');
+    if (cat === 'contato') navigate('/ajuda/contato');
+  };
 
   const faqData = [
     {
@@ -121,7 +146,6 @@ export const AjudaPage = () => {
     item.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   const categories = [...new Set(faqData.map(item => item.category))];
 
   return (
@@ -148,9 +172,9 @@ export const AjudaPage = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions (cards com links) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer">
+        <Link to="/ajuda/docs" className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <Book className="h-6 w-6 text-blue-600" />
@@ -160,7 +184,7 @@ export const AjudaPage = () => {
               <p className="text-sm text-muted-foreground">Guias detalhados e tutoriais</p>
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer">
           <div className="flex items-center space-x-4">
@@ -174,7 +198,7 @@ export const AjudaPage = () => {
           </div>
         </div>
 
-        <div className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer">
+        <Link to="/ajuda/contato" className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <Phone className="h-6 w-6 text-purple-600" />
@@ -184,14 +208,14 @@ export const AjudaPage = () => {
               <p className="text-sm text-muted-foreground">(11) 9999-9999</p>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Content Tabs */}
       <div className="border-b border-border">
         <nav className="flex space-x-8">
           <button
-            onClick={() => setActiveCategory('faq')}
+            onClick={() => handleTabChange('faq')}
             className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
               activeCategory === 'faq'
                 ? 'border-primary text-primary'
@@ -201,7 +225,7 @@ export const AjudaPage = () => {
             Perguntas Frequentes
           </button>
           <button
-            onClick={() => setActiveCategory('docs')}
+            onClick={() => handleTabChange('docs')}
             className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
               activeCategory === 'docs'
                 ? 'border-primary text-primary'
@@ -211,7 +235,7 @@ export const AjudaPage = () => {
             Documentação
           </button>
           <button
-            onClick={() => setActiveCategory('contato')}
+            onClick={() => handleTabChange('contato')}
             className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
               activeCategory === 'contato'
                 ? 'border-primary text-primary'
@@ -370,4 +394,3 @@ export const AjudaPage = () => {
     </div>
   );
 };
-

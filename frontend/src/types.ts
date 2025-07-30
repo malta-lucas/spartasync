@@ -200,3 +200,22 @@ export interface SidebarStats {
   fila_envio: number;
   // ... adicione outros se quiser
 }
+
+export type PermissionLevel = 'none' | 'view' | 'edit';
+
+export type ModulePermission = {
+  id: number | null;
+  module: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+  };
+  level: PermissionLevel;
+};
+
+export type Hierarquia = {
+  id: number;
+  name: string;
+  module_permissions: ModulePermission[];
+};

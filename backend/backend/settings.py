@@ -13,12 +13,14 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").sp
 INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
+    "jazzmin",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'modules',
     'core',
     'wahaplus',
     'contacts',
@@ -49,7 +51,6 @@ AUTH_USER_MODEL = 'core.User'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),     # Tempo do token de acesso (ex: 60 min)
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),        # Tempo do refresh (ex: 7 dias)
-    # Outros parâmetros podem ser customizados aqui se desejar
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -125,3 +126,47 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Administração Sparta",
+    "site_header": "Gerenciamento de Tags",
+    "site_brand": "Sparta Sync",
+    "welcome_sign": "Bem-vindo ao Painel Administrativo!",
+    "copyright": "Sparta Sync",
+    "search_model": ["tags.Tag", "contacts.Contact"],
+    "user_avatar": None,
+
+    "topmenu_links": [
+        {"name": "Documentação", "url": "https://docs.spartasync.com", "new_window": True},
+        {"model": "tags.Tag"},
+        {"app": "contacts"},
+    ],
+
+    "order_with_respect_to": [
+        "core.Company",
+        "core.Plan",
+        "core.Role",
+        "core.User",
+        "tags.Tag",
+        "contacts.Contact",
+    ],
+
+    # CORES E FONTE:
+    "theme": "cosmo",  # use "darkly", "flatly", "cyborg", etc para dark mode
+    "custom_css": "admin/custom.css",  # Seu CSS customizado (opcional)
+    "show_sidebar": True,
+    "navigation_expanded": True,
+
+    # Botões, textos e badges coloridos:
+    "related_modal_active": True,
+    "icons": {
+        "tags.Tag": "fas fa-tags",
+        "contacts.Contact": "fas fa-users",
+        "core.User": "fas fa-user-shield",
+        "core.Company": "fas fa-building",
+        # e por aí vai
+    },
+    # Tabela mais moderna:
+    "changeform_format": "horizontal_tabs",  # ou "collapsible", "single"
+}
