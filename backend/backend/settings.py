@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +23,7 @@ INSTALLED_APPS = [
     'wahaplus',
     'contacts',
     'tags',
+    'search',
 ]
 
 MIDDLEWARE = [
@@ -42,6 +44,13 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'core.User'
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),     # Tempo do token de acesso (ex: 60 min)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),        # Tempo do refresh (ex: 7 dias)
+    # Outros parâmetros podem ser customizados aqui se desejar
+}
 
 CORS_ALLOW_ALL_ORIGINS = True
 

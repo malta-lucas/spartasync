@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { Header } from './components/layout/Header';
@@ -21,15 +21,16 @@ import { AIAssistant } from './components/ai/AIAssistant';
 import { LoginPage } from './pages/LoginPage';
 import { SubscribeCompanyPage } from './pages/SubscribeCompanyPage';
 
-import { BannerProvider } from './components/layout/BannerContext'; // Banner global
+import { BannerProvider } from './components/layout/BannerContext';
 import './App.css';
 
-// ---- Auth Context
+// ---- Auth Context ----
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
+    // Sempre tentar carregar o user salvo (decodificado do JWT) ao montar!
     try {
       const savedUser = localStorage.getItem('user');
       return savedUser ? JSON.parse(savedUser) : null;
@@ -50,7 +51,13 @@ function AuthProvider({ children }) {
     setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
   }
+
+  // Só pra debug!
+  useEffect(() => {
+    console.log('AuthProvider mudou:', { user, token });
+  }, [user, token]);
 
   return (
     <AuthContext.Provider value={{ user, token, doLogin, doLogout }}>
@@ -59,19 +66,20 @@ function AuthProvider({ children }) {
   );
 }
 
-// ---- Protected Route
+
+// ---- Protected Route ----
 function ProtectedRoute({ children }) {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const location = useLocation();
-  if (!user || !token) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
   return children;
 }
 
-// ---- Theme Context
+// ---- Theme Context ----
 const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
-// ---- MainContent (rotas internas protegidas)
+// ---- MainContent (rotas internas protegidas) ----
 function MainContent({ sidebarCollapsed }) {
   const location = useLocation();
   const isSessoesNova = location.pathname === '/sessoes/conectar';
@@ -123,7 +131,6 @@ function MainContent({ sidebarCollapsed }) {
             <Route path="/ajuda/docs" element={<AjudaPage />} />
             <Route path="/ajuda/contato" element={<AjudaPage />} />
             <Route path="/tutorial" element={<TutorialPage />} />
-            {/* Fallback para rota inválida protegida */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
@@ -132,7 +139,7 @@ function MainContent({ sidebarCollapsed }) {
   );
 }
 
-// ---- Fallback para rotas públicas não encontradas
+// ---- NotFound ----
 function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -144,21 +151,21 @@ function NotFoundPage() {
   );
 }
 
-// ---- App Principal
+// ---- App Principal ----
 function App() {
   const [isDark, setIsDark] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    setIsDark((d) => !d);
     document.documentElement.classList.toggle('dark');
   };
-  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
+  const toggleSidebar = () => setSidebarCollapsed((c) => !c);
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       <AuthProvider>
-        <BannerProvider> {/* Banner global para toda a aplicação */}
+        <BannerProvider>
           <Router>
             <Routes>
               {/* Rotas públicas */}

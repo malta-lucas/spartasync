@@ -5,8 +5,20 @@ import { useBanner } from '../components/layout/BannerContext';
 import * as tagsService from '../services/tagsService';
 import { Tag } from '../types';
 
+// Função utilitária para pegar o usuário logado do localStorage
+function getCurrentUser() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return user;
+  } catch {
+    return null;
+  }
+}
+
 export const TagsPage = () => {
   const { showBanner } = useBanner();
+  const user = getCurrentUser();
+  const companyId = user?.company?.id;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [tags, setTags] = useState<Tag[]>([]);
@@ -42,8 +54,12 @@ export const TagsPage = () => {
   }, []);
 
   async function handleOpenCreate() {
+    if (!companyId) {
+      showBanner('error', 'Não foi possível identificar a empresa do usuário.');
+      return;
+    }
     setModalMode('create');
-    setCurrentTag({ color: '#10B981', title: '', content: '', user_company: 1 });
+    setCurrentTag({ color: '#10B981', title: '', content: '', user_company: companyId });
     setShowModal(true);
     setEditId(null);
   }
@@ -65,13 +81,17 @@ export const TagsPage = () => {
       showBanner('error', 'O nome da tag é obrigatório!');
       return;
     }
+    if (!companyId) {
+      showBanner('error', 'Não foi possível identificar a empresa do usuário.');
+      return;
+    }
     try {
       if (modalMode === 'create') {
         await tagsService.createTag({
           title: currentTag.title,
           color: currentTag.color || '#10B981',
           content: currentTag.content || '',
-          user_company: currentTag.user_company as number, // pegue do usuário logado
+          user_company: companyId,
         });
         showBanner('success', `Tag "${currentTag.title}" criada com sucesso!`);
       } else if (editId) {
@@ -79,7 +99,7 @@ export const TagsPage = () => {
           title: currentTag.title,
           color: currentTag.color,
           content: currentTag.content,
-          user_company: currentTag.user_company as number,
+          user_company: companyId,
         });
         showBanner('success', `Tag "${currentTag.title}" atualizada com sucesso!`);
       }

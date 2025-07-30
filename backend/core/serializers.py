@@ -24,9 +24,18 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'phone', 'company',
+            'id', 'username', 'email', 'phone', 'password', 'company',
             'role', 'plan', 'is_active', 'is_staff'
         ]
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
 
 class RegisterCompanySerializer(serializers.Serializer):
     company_name = serializers.CharField()
@@ -63,6 +72,6 @@ class RegisterCompanySerializer(serializers.Serializer):
             password=validated_data['password'],
             company=company,
             is_staff=True,
-            is_superuser=True
+            is_superuser=True  # Altere para False se quiser apenas admin normal
         )
         return user

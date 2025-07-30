@@ -1,63 +1,78 @@
-import api from './api'; // Seu axios customizado
 import axios from 'axios';
+import { JwtDecoded, RegisterCompanyData, LoginData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/';
 
-export interface RegisterCompanyData {
-  company_name: string;
-  company_type?: string;
-  admin_email: string;
-  admin_phone?: string;
-  password: string;
-  accept_promo?: boolean;
+
+type LoginResponse = {
+  access: string;
+  refresh: string;
+};
+
+export function decodeJwt(token: string): JwtDecoded | null {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
 }
 
-export interface LoginData {
-  username: string;
-  password: string;
-  company?: string;
+export function getCurrentUser(): JwtDecoded | null {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  return decodeJwt(token);
 }
 
-export interface AuthResponse {
-  refresh?: string;
-  access?: string;
-  token?: string;
-  user?: {
-    id: number;
-    username: string;
-    email: string;
-    company: { id: number; name: string };
-    role: { id: number; name: string };
-  };
-}
-
-// Cadastro de empresa + usuário admin (normalmente não exige token)
 export async function registerCompany(data: RegisterCompanyData): Promise<any> {
   const response = await axios.post(`${API_URL}register-company/`, data);
   return response.data;
 }
 
-export async function login(data: LoginData): Promise<{ user: AuthResponse['user'], token: string }> {
-  // O Axios infere o tipo pelo <AuthResponse>
-  const response = await axios.post<AuthResponse>(`${API_URL}auth/login/`, data);
+export async function login(data: LoginData): Promise<{ token: string, refresh: string, user: JwtDecoded | null }> {
+  try {
+    const response = await axios.post<LoginResponse>(`${API_URL}auth/login/`, data);
 
-  const accessToken = response.data.access ?? '';
-  if (!accessToken) throw new Error('Token de acesso não recebido');
+    const accessToken = response.data.access ?? '';
+    const refreshToken = response.data.refresh ?? '';
 
-  const profile = await axios.get<AuthResponse['user']>(`${API_URL}auth/me/`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+    if (!accessToken) throw new Error('Token de acesso não recebido');
 
-  return {
-    user: profile.data,
-    token: accessToken,
-  };
+    const user = decodeJwt(accessToken);
+
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('refresh', refreshToken);
+
+    return {
+      token: accessToken,
+      refresh: refreshToken,
+      user,
+    };
+  } catch (error) {
+    throw new Error("Erro ao realizar login. Verifique suas credenciais.");
+  }
 }
 
-// ---- LOGOUT ----
+export async function refreshToken(): Promise<string> {
+  const refresh = localStorage.getItem('refresh');
+  if (!refresh) throw new Error('Token de refresh não encontrado');
+
+  const response = await axios.post<{ access: string }>(
+    `${API_URL}auth/token/refresh/`,
+    { refresh }
+  );
+  const newAccessToken = response.data.access;
+
+  localStorage.setItem('token', newAccessToken);
+
+  return newAccessToken;
+}
+
 export function logout() {
-  localStorage.removeItem('user');
   localStorage.removeItem('token');
+  localStorage.removeItem('refresh');
+}
+
+export function getAccessToken() {
+  return localStorage.getItem('token') || '';
 }

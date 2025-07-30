@@ -163,3 +163,40 @@ export interface Tag {
   last_use: string | null;
   contactCount: number; // calculado no serializer do backend!
 }
+
+export interface JwtDecoded {
+  user_id?: string | number;
+  username?: string;
+  email?: string;
+  exp?: number;
+  [key: string]: any;
+}
+
+export interface RegisterCompanyData {
+  company_name: string;
+  company_type?: string;
+  admin_email: string;
+  admin_phone?: string;
+  password: string;
+  accept_promo?: boolean;
+}
+
+export interface LoginData {
+  username: string;    // E-mail ou telefone
+  password: string;
+  company?: string;
+}
+
+export interface SidebarStats {
+  contatos: number;
+  grupos: number;
+  mensagens: number;
+  campanhas: number;
+  tags: number;
+  sessoes_ativas: number;
+  sessoes_historico: number;
+  agendamentos: number;
+  envios_programados: number;
+  fila_envio: number;
+  // ... adicione outros se quiser
+}

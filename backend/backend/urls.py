@@ -4,9 +4,13 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from .views import SidebarStatsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Coloque aqui:
+    path("api/sidebar-stats/", SidebarStatsView.as_view()),
 
     # Suas rotas principais
     path('api/', include('core.urls')),

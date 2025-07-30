@@ -1,7 +1,8 @@
-# core/authentication.py
+# core/authenticator.py (ou onde você personaliza seu TokenObtainPairSerializer)
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.exceptions import ValidationError
 from .serializers import UserSerializer
 from django.contrib.auth import get_user_model
 
@@ -18,21 +19,37 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             or User.objects.filter(email=identifier).first()
             or User.objects.filter(phone=identifier).first()
         )
-        if not user or not user.is_active:
-            raise self.fail('no_active_account')
+        if not user:
+            raise ValidationError({'detail': 'Usuário não encontrado.'})
+        if not user.is_active:
+            raise ValidationError({'detail': 'Usuário inativo. Entre em contato com o administrador.'})
 
-        # (Opcional) filtrar por empresa se desejar
         if company and hasattr(user, 'company'):
-            if (user.company and user.company.name != company):
-                raise self.fail('no_active_account')
+            if (user.company and user.company.name != company and user.company.id != company):
+                raise ValidationError({'detail': 'Empresa informada não confere com o cadastro.'})
 
         if not user.check_password(password):
-            raise self.fail('no_active_account')
+            raise ValidationError({'detail': 'Senha incorreta.'})
 
+        # Aqui, pega o resultado normal do SimpleJWT (tokens)
         data = super().validate({'username': user.username, 'password': password})
-        # Acrescenta user no response!
-        data['user'] = UserSerializer(user).data
+        # Não precisa serializar o usuário aqui!
         return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Adicione aqui o que quiser ao payload do JWT:
+        token['username'] = user.username
+        token['email'] = user.email
+        token['company'] = {
+            'id': user.company.id if user.company else None,
+            'name': user.company.name if user.company else None,
+            'company_type': user.company.company_type if user.company else None,
+        }
+        # Você pode adicionar outros campos: 'role', 'is_staff', etc.
+        token['is_staff'] = user.is_staff
+        return token
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

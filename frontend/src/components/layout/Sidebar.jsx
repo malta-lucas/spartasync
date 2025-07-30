@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Phone, Users, MessageSquare, Calendar, Send, 
@@ -6,9 +6,19 @@ import {
   History, UserCheck
 } from 'lucide-react';
 
+// Importe o service de stats
+import { fetchSidebarStats } from '../../services/sidebarStatsService';
+
 export const Sidebar = ({ collapsed, onToggle }) => {
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    fetchSidebarStats()
+      .then(setStats)
+      .catch(() => setStats(null));
+  }, []);
 
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
@@ -29,24 +39,24 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Home,
           label: 'Dashboard',
           path: '/',
-          badge: '8'
+          badge: stats ? stats.contatos : '...',
         },
         {
           key: 'telefone',
           icon: Phone,
           label: 'Telefone',
           path: '/telefone',
-          badge: '3'
+          badge: stats ? stats.telefone : '...',
         },
         {
           key: 'sessoes',
           icon: UserCheck,
           label: 'Sessões',
           hasSubmenu: true,
-          badge: '2',
+          badge: stats ? stats.sessoes_ativas : '...',
           submenu: [
-            { label: 'Sessões Ativas', path: '/sessoes/ativas' },
-            { label: 'Histórico', path: '/sessoes/historico' }
+            { label: 'Sessões Ativas', path: '/sessoes/ativas', badge: stats ? stats.sessoes_ativas : undefined },
+            { label: 'Histórico', path: '/sessoes/historico', badge: stats ? stats.sessoes_historico : undefined }
           ]
         },
         {
@@ -54,16 +64,15 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Users,
           label: 'Contatos',
           hasSubmenu: true,
-          badge: '1247',
+          badge: stats ? stats.contatos : '...',
           submenu: [
-            { label: 'Todos os Contatos', path: '/contatos' },
-            { label: 'Grupos', path: '/contatos/grupos' },
+            { label: 'Todos os Contatos', path: '/contatos', badge: stats ? stats.contatos : undefined },
+            { label: 'Grupos', path: '/contatos/grupos', badge: stats ? stats.grupos : undefined },
             { label: 'Importar/Exportar', path: '/contatos/importar' }
           ]
         }
       ]
     },
-    // ... demais menus iguais
     {
       category: 'COMUNICAÇÃO',
       items: [
@@ -72,9 +81,9 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: MessageSquare,
           label: 'Mensagens',
           hasSubmenu: true,
-          badge: '14',
+          badge: stats ? stats.mensagens : '...',
           submenu: [
-            { label: 'Templates', path: '/mensagens' },
+            { label: 'Templates', path: '/mensagens', badge: stats ? stats.mensagens : undefined },
             { label: 'Envio Individual', path: '/mensagens/individual' },
             { label: 'Histórico de Envios', path: '/mensagens/historico' }
           ]
@@ -84,17 +93,17 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Calendar,
           label: 'Agendamento',
           path: '/agendamento',
-          badge: '5'
+          badge: stats ? stats.agendamentos : '...'
         },
         {
           key: 'envio',
           icon: Send,
           label: 'Envio',
           hasSubmenu: true,
-          badge: '23',
+          badge: stats ? stats.envios_programados : '...',
           submenu: [
-            { label: 'Envios Programados', path: '/envio' },
-            { label: 'Fila de Envio', path: '/envio/fila' },
+            { label: 'Envios Programados', path: '/envio', badge: stats ? stats.envios_programados : undefined },
+            { label: 'Fila de Envio', path: '/envio/fila', badge: stats ? stats.fila_envio : undefined },
             { label: 'Relatórios', path: '/envio/relatorios' }
           ]
         }
@@ -108,9 +117,9 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Megaphone,
           label: 'Campanhas',
           hasSubmenu: true,
-          badge: '8',
+          badge: stats ? stats.campanhas : '...',
           submenu: [
-            { label: 'Todas as Campanhas', path: '/campanhas' },
+            { label: 'Todas as Campanhas', path: '/campanhas', badge: stats ? stats.campanhas : undefined },
             { label: 'Criar Campanha', path: '/campanhas/criar' },
             { label: 'Performance', path: '/campanhas/performance' }
           ]
@@ -120,16 +129,16 @@ export const Sidebar = ({ collapsed, onToggle }) => {
           icon: Tag,
           label: 'Tags',
           path: '/tags',
-          badge: '12'
+          badge: stats ? stats.tags : '...'
         },
         {
           key: 'historico',
           icon: History,
           label: 'Histórico',
           hasSubmenu: true,
-          badge: '156',
+          badge: stats ? stats.historico : '...',
           submenu: [
-            { label: 'Atividades', path: '/historico' },
+            { label: 'Atividades', path: '/historico', badge: stats ? stats.historico : undefined },
             { label: 'Alterações', path: '/historico/alteracoes' },
             { label: 'Logs do Sistema', path: '/historico/logs' }
           ]
@@ -268,6 +277,11 @@ export const Sidebar = ({ collapsed, onToggle }) => {
                 style={{ cursor: 'pointer' }}
               >
                 {subItem.label}
+                {subItem.badge !== undefined && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-medium bg-muted text-muted-foreground">
+                    {subItem.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

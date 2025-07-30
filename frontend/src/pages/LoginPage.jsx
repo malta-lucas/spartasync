@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { login } from "../services/authService";
 import { ShieldCheck, LogIn, Eye, EyeOff, Building2, Loader2 } from "lucide-react";
 import { useAuth } from "../App";
-import { useBanner } from "../components/layout/BannerContext"; // <--- aqui
+import { useBanner } from "../components/layout/BannerContext";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { doLogin, user } = useAuth();
-  const { showBanner } = useBanner(); // <--- aqui
+  const { showBanner } = useBanner();
+
   const [form, setForm] = useState({ company: "", identifier: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  // Redireciona se já estiver autenticado
+  // Se já autenticado, redireciona
   useEffect(() => {
+    console.log("LoginPage useEffect: user", user); // ADICIONE ESSE LOG!
     if (user) {
       navigate("/", { replace: true });
     }
@@ -27,7 +30,6 @@ export function LoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setLoading(true);
-
     try {
       const response = await login({
         company: form.company,
@@ -35,13 +37,9 @@ export function LoginPage() {
         password: form.password,
       });
       doLogin({ user: response.user, token: response.token });
-
-      // Mostra banner de sucesso
       showBanner("success", "Login realizado com sucesso!");
-
-      navigate("/", { replace: true });
+      // useEffect irá redirecionar
     } catch (err) {
-      // Mostra banner de erro
       showBanner("error", "Dados inválidos. Verifique a empresa, e-mail/telefone e senha.");
     } finally {
       setLoading(false);

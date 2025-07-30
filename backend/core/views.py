@@ -32,10 +32,3 @@ class RegisterCompanyView(APIView):
             serializer.save()
             return Response({'message': 'Empresa e usuário criados!'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class MeView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        return Response(UserSerializer(user).data)
