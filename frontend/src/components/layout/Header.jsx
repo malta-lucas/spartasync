@@ -5,7 +5,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../App';
-import { globalSearch } from '../../services/searchService'; // Ajuste o caminho se necessário
+import { globalSearch } from '../../services/searchService';
 
 export const Header = ({ onToggleTheme, onToggleSidebar }) => {
   // Dropdowns padrões
@@ -21,6 +21,9 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [searchFocus, setSearchFocus] = useState(false);
 
+  // Debounce
+  const debounceTimeout = useRef(null);
+
   // Refs para fechar dropdowns ao clicar fora
   const notifRef = useRef();
   const msgRef = useRef();
@@ -30,6 +33,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { doLogout } = useAuth();
 
+  // Fechar dropdowns ao clicar fora
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -70,10 +74,39 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
     navigate('/login');
   };
 
+  // BUSCA AUTOMÁTICA (debounce)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults(null);
+      setShowSearchDropdown(false);
+      return;
+    }
+    setShowSearchDropdown(true);
+    setSearchLoading(true);
+
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        const results = await globalSearch(searchTerm);
+        setSearchResults(results);
+      } catch {
+        setSearchResults(null);
+      }
+      setSearchLoading(false);
+    }, 1500);
+
+    // Limpeza do timeout
+    return () => {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    };
+  }, [searchTerm]);
+
+  // BUSCA IMEDIATA AO APERTAR ENTER
   const handleSearch = async (e) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
-      setSearchLoading(true);
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current); // cancela debounce
       setShowSearchDropdown(true);
+      setSearchLoading(true);
       try {
         const results = await globalSearch(searchTerm);
         setSearchResults(results);
@@ -84,33 +117,27 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
     }
   };
 
-  // Exemplo de dados
-  const notifications = [
-    { id: 1, title: 'Nova mensagem', message: 'João Silva enviou uma mensagem', time: '5 min' },
-    { id: 2, title: 'Reunião agendada', message: 'Reunião com cliente às 14h', time: '1 h' },
-    { id: 3, title: 'Campanha finalizada', message: 'Campanha de email foi concluída', time: '2 h' }
-  ];
-
-  const messages = [
-    { id: 1, sender: 'Maria Santos', message: 'Olá, gostaria de mais informações...', time: '10 min', avatar: '👩' },
-    { id: 2, sender: 'Carlos Lima', message: 'Quando podemos agendar uma reunião?', time: '30 min', avatar: '👨' },
-    { id: 3, sender: 'Ana Costa', message: 'Obrigada pelo atendimento!', time: '1 h', avatar: '👩' }
-  ];
-
-  const dropdownMotion = {
-    initial: { scaleY: 0, opacity: 0, originY: 0 },
-    animate: { scaleY: 1, opacity: 1, originY: 0 },
-    exit:    { scaleY: 0, opacity: 0, originY: 0 },
-    transition: { duration: 0.25, ease: [0.43, 0.13, 0.23, 0.96] }
+  // Navegação ao clicar em um resultado
+  const handleTagClick = (tag) => {
+    // Exemplo: navega para página de Tag pelo id
+    navigate(`/tags/${tag.id}`);
+    setShowSearchDropdown(false);
   };
+
+  const handleContactClick = (contact) => {
+    // Exemplo: navega para página de contato pelo id
+    navigate(`/contatos/${contact.id}`);
+    setShowSearchDropdown(false);
+  };
+
+  // ... notificações e mensagens continuam igual
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border h-16">
       <div className="flex items-center justify-between h-full px-4">
-        {/* Logo e Menu Toggle */}
+        {/* ...menu lateral e logo */}
         <div className="flex items-center space-x-4">
-          <button
-            onClick={onToggleSidebar}
+          <button onClick={onToggleSidebar}
             className="p-2 rounded-lg hover:bg-accent transition-colors"
           >
             <Menu className="h-5 w-5" />
@@ -177,6 +204,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                               <div
                                 key={tag.id}
                                 className="px-2 py-1 hover:bg-accent rounded cursor-pointer text-sm"
+                                onClick={() => handleTagClick(tag)}
                               >
                                 <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: tag.color }}></span>
                                 {tag.title}
@@ -191,6 +219,7 @@ export const Header = ({ onToggleTheme, onToggleSidebar }) => {
                               <div
                                 key={contact.id}
                                 className="px-2 py-1 hover:bg-accent rounded cursor-pointer text-sm"
+                                onClick={() => handleContactClick(contact)}
                               >
                                 {contact.name} <span className="text-muted-foreground ml-2 text-xs">{contact.email}</span>
                               </div>

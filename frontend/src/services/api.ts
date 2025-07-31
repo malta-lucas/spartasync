@@ -1,16 +1,25 @@
-import axios from "axios";
+// src/services/api.ts
 
+import axios from 'axios';
+
+// Usa a variável do Vite (.env)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+// Cria uma instância Axios configurada
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/',
+  baseURL: API_BASE_URL,
 });
 
-api.interceptors.request.use((config) => {
-  if (!config.headers) config.headers = {};
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-  return config;
-});
+// Intercepta toda requisição para adicionar Authorization se houver token salvo
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token'); // ou 'accessToken' se for esse o nome
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

@@ -1,4 +1,6 @@
-import axios from 'axios';
+// src/services/searchService.ts
+
+import api from './api'; // importa a instância já configurada
 
 export interface SearchResults {
   tags: {
@@ -22,7 +24,8 @@ export async function globalSearch(
   contacts_page = 1,
   page_size = 10
 ): Promise<SearchResults> {
-  const response = await axios.get<SearchResults>('/api/search/', {
+  // Agora só chama a rota relativa, o token vai automático
+  const response = await api.get<SearchResults>('/search/', {
     params: { term, tags_page, contacts_page, page_size }
   });
   return response.data;
